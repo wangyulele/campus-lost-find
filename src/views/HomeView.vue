@@ -6,35 +6,58 @@
         <h1>欢迎使用校园失物招领系统</h1>
         <p>帮助同学们快速找回丢失的物品，也让拾到的物品尽快物归原主</p>
       </div>
-      
-      <div class="function-cards">
-        <div class="func-card" @click="$router.push('/publish')">
-          <div class="icon">📝</div>
-          <h3>发布信息</h3>
-          <p>发布丢失物品或拾到物品的信息</p>
+
+      <!-- 搜索+筛选区域 -->
+      <div class="search-filter-wrap">
+        <div class="search-box">
+          <input
+            v-model="searchKeyword"
+            type="text"
+            placeholder="请输入物品名称、描述进行搜索..."
+            @keyup.enter="handleSearch"
+          />
+          <button @click="handleSearch">搜索</button>
         </div>
-        <div class="func-card" @click="$router.push('/list')">
-          <div class="icon">🔍</div>
-          <h3>物品列表</h3>
-          <p>浏览全部失物招领信息，搜索筛选</p>
+
+        <div class="filter-wrap">
+          <span class="filter-label">筛选：</span>
+          <select v-model="filterType" @change="handleFilterChange">
+            <option value="all">全部</option>
+            <option value="lost">寻物启事</option>
+            <option value="found">捡到物品</option>
+          </select>
         </div>
-        <div class="func-card" @click="$router.push('/personal')">
-          <div class="icon">👤</div>
-          <h3>个人中心</h3>
-          <p>管理我发布的信息，标记物品认领状态</p>
-        </div>
-        <div class="func-card" @click="$router.push('/stats')">
-          <div class="icon">📊</div>
-          <h3>数据统计</h3>
-          <p>查看失物招领数据统计分析</p>
-        </div>
+      </div>
+
+      <!-- 这里后面放物品列表，现在占位 -->
+      <div class="item-placeholder">
+        <p>搜索筛选结果展示区域（后续接入物品数据）</p>
+        <p>搜索关键词：{{ searchKeyword || '无' }}</p>
+        <p>筛选类型：{{ filterType === 'all' ? '全部' : filterType === 'lost' ? '寻物启事' : '捡到物品' }}</p>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
+import { ref } from 'vue'
 import NavBar from '../components/NavBar.vue'
+
+const searchKeyword = ref('')
+const filterType = ref('all')
+
+// 搜索
+function handleSearch() {
+  console.log('搜索关键词：', searchKeyword.value)
+  console.log('当前筛选条件：', filterType.value)
+  // 后续这里对接列表查询逻辑
+}
+
+// 筛选切换
+function handleFilterChange() {
+  console.log('切换筛选条件：', filterType.value)
+  // 后续这里对接列表查询逻辑
+}
 </script>
 
 <style scoped>
@@ -64,42 +87,76 @@ import NavBar from '../components/NavBar.vue'
   font-size: 16px;
 }
 
-.function-cards {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
+/* 搜索筛选容器 */
+.search-filter-wrap {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   gap: 20px;
-}
-
-.func-card {
-  background: white;
-  border-radius: 12px;
-  padding: 30px 20px;
-  text-align: center;
+  background: #fff;
+  padding: 20px;
+  border-radius: 10px;
   box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  margin-bottom: 30px;
+}
+
+.search-box {
+  display: flex;
+  flex: 1;
+  gap: 10px;
+}
+
+.search-box input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  outline: none;
+}
+
+.search-box input:focus {
+  border-color: #667eea;
+}
+
+.search-box button {
+  padding: 10px 24px;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 6px;
   cursor: pointer;
-  transition: transform 0.3s, box-shadow 0.3s;
 }
 
-.func-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+.search-box button:hover {
+  background: #5868d8;
 }
 
-.icon {
-  font-size: 40px;
-  margin-bottom: 16px;
+.filter-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.func-card h3 {
-  margin: 0 0 8px 0;
-  color: #333;
-  font-size: 18px;
+.filter-label {
+  font-size: 14px;
+  color: #444;
 }
 
-.func-card p {
-  margin: 0;
+.filter-wrap select {
+  padding: 9px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  outline: none;
+}
+
+.item-placeholder {
+  background: #fff;
+  padding: 40px;
+  border-radius: 10px;
+  text-align: center;
   color: #888;
-  font-size: 13px;
-  line-height: 1.5;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
 }
 </style>
