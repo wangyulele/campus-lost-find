@@ -1,174 +1,147 @@
 <template>
-  <div class="login-container">
+  <div class="page-wrap">
     <div class="login-box">
-      <h2>校园失物招领系统</h2>
-      <p class="subtitle">用户登录</p>
-      
-      <form @submit.prevent="handleLogin">
-        <div class="form-item">
-          <label>账号</label>
-          <input 
-            type="text" 
-            v-model="form.username" 
-            placeholder="请输入账号"
-          />
-          <span v-if="errors.username" class="error">{{ errors.username }}</span>
-        </div>
-        
-        <div class="form-item">
-          <label>密码</label>
-          <input 
-            type="password" 
-            v-model="form.password" 
-            placeholder="请输入密码"
-          />
-          <span v-if="errors.password" class="error">{{ errors.password }}</span>
-        </div>
-        
-        <button type="submit" class="login-btn">登 录</button>
-      </form>
-      
-      <p class="tip">提示：本系统为教学演示，测试账号 admin / 123456</p>
+      <div class="title">{{ isRegister ? '账号注册' : '用户登录' }}</div>
+      <div class="form-item">
+        <label>账号</label>
+        <input v-model="form.account" type="text" placeholder="请输入账号">
+      </div>
+      <div class="form-item">
+        <label>密码</label>
+        <input v-model="form.pwd" type="password" placeholder="请输入密码">
+      </div>
+      <div v-if="isRegister" class="form-item">
+        <label>用户名</label>
+        <input v-model="form.name" type="text" placeholder="请输入你的昵称">
+      </div>
+      <button @click="submit" class="submit-btn">{{ isRegister ? '注册' : '登录' }}</button>
+      <p class="tip">
+        {{ isRegister ? '已有账号？' : '没有账号？' }}
+        <span @click="isRegister = !isRegister" class="switch">
+          {{ isRegister ? '去登录' : '去注册' }}
+        </span>
+      </p>
     </div>
   </div>
 </template>
 
 <script setup>
-import { reactive } from 'vue'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { setStorage } from '../utils/storage'
-
 const router = useRouter()
 
-const form = reactive({
-  username: '',
-  password: ''
+const isRegister = ref(false)
+const form = ref({
+  account: '',
+  pwd: '',
+  name: ''
 })
 
-const errors = reactive({
-  username: '',
-  password: ''
-})
-
-function validateForm() {
-  let valid = true
-  errors.username = ''
-  errors.password = ''
-  
-  if (!form.username.trim()) {
-    errors.username = '请输入账号'
-    valid = false
-  }
-  if (!form.password.trim()) {
-    errors.password = '请输入密码'
-    valid = false
-  } else if (form.password.length < 6) {
-    errors.password = '密码长度不能少于6位'
-    valid = false
-  }
-  return valid
+function getUserList() {
+  return JSON.parse(localStorage.getItem('userList')) || []
 }
 
-function handleLogin() {
-  if (!validateForm()) return
-  
-  if (form.username === 'admin' && form.password === '123456') {
-    setStorage('userInfo', {
-      username: form.username,
-      loginTime: new Date().toLocaleString()
+function submit() {
+  const userList = getUserList()
+  if (isRegister.value) {
+    const hasUser = userList.find(u => u.account === form.value.account)
+    if (hasUser) {
+      alert('账号已存在！')
+      return
+    }
+    if (!form.value.account || !form.value.pwd || !form.value.name) {
+      alert('请填写完整信息')
+      return
+    }
+    userList.push({
+      account: form.value.account,
+      pwd: form.value.pwd,
+      name: form.value.name
     })
-    setStorage('isLogin', true)
-    
-    alert('登录成功！')
-    router.push('/')
+    localStorage.setItem('userList', JSON.stringify(userList))
+    alert('注册成功，请登录！')
+    isRegister.value = false
   } else {
-    alert('账号或密码错误！测试账号：admin / 123456')
+    const findUser = userList.find(u => u.account === form.value.account && u.pwd === form.value.pwd)
+    if (!findUser) {
+      alert('账号密码错误！')
+      return
+    }
+    localStorage.setItem('user', JSON.stringify(findUser))
+    router.push('/')
   }
 }
 </script>
 
 <style scoped>
-.login-container {
+.page-wrap{
   min-height: 100vh;
+  /* 浅蓝渐变背景，校园风格 */
+  background: linear-gradient(135deg, #e8f4ff, #f0f7ff);
   display: flex;
-  justify-content: center;
   align-items: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  justify-content: center;
 }
-
 .login-box {
-  background: white;
-  padding: 40px;
-  border-radius: 12px;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-  width: 400px;
+  width: 380px;
+  padding: 36px;
+  background: #ffffff;
+  border-radius: 14px;
+  /* 卡片阴影，更有层次感 */
+  box-shadow: 0 4px 16px rgba(0, 80, 160, 0.12);
 }
-
-.login-box h2 {
+.title {
+  font-size: 24px;
   text-align: center;
-  color: #333;
-  margin: 0 0 8px 0;
+  margin-bottom: 28px;
+  color: #2c5282;
+  font-weight: 600;
 }
-
-.subtitle {
-  text-align: center;
-  color: #999;
-  margin: 0 0 30px 0;
-}
-
 .form-item {
-  margin-bottom: 20px;
+  margin-bottom: 18px;
 }
-
 .form-item label {
-  display: block;
-  margin-bottom: 8px;
-  color: #555;
-  font-size: 14px;
+  display:block;
+  margin-bottom:6px;
+  color:#4a5568;
 }
-
 .form-item input {
-  width: 100%;
-  padding: 12px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 14px;
+  width:100%;
   box-sizing: border-box;
+  padding:10px 12px;
+  border:1px solid #cbd5e0;
+  border-radius:8px;
   outline: none;
-  transition: border-color 0.3s;
+  transition: border 0.2s;
 }
-
-.form-item input:focus {
-  border-color: #667eea;
+.form-item input:focus{
+  border-color:#409eff;
 }
-
-.error {
-  color: #e74c3c;
-  font-size: 12px;
-  margin-top: 5px;
-  display: block;
+.submit-btn {
+  width:100%;
+  padding:11px;
+  background:#409eff;
+  color:white;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+  font-size:16px;
+  transition: background 0.3s;
 }
-
-.login-btn {
-  width: 100%;
-  padding: 12px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 16px;
-  cursor: pointer;
-  transition: opacity 0.3s;
+.submit-btn:hover{
+  background:#337ecc;
 }
-
-.login-btn:hover {
-  opacity: 0.9;
-}
-
 .tip {
-  text-align: center;
-  color: #999;
-  font-size: 12px;
-  margin-top: 20px;
+  text-align:center;
+  margin-top:20px;
+  color:#718096;
+}
+.switch {
+  color:#409eff;
+  cursor:pointer;
+  margin-left:4px;
+}
+.switch:hover{
+  text-decoration: underline;
 }
 </style>

@@ -1,162 +1,181 @@
 <template>
-  <div>
-    <NavBar />
-    <div class="home-content">
-      <div class="welcome-card">
-        <h1>欢迎使用校园失物招领系统</h1>
-        <p>帮助同学们快速找回丢失的物品，也让拾到的物品尽快物归原主</p>
+  <div class="home-container">
+    <!-- 顶部导航栏，蓝色背景 -->
+    <div class="top-nav">
+      <div class="nav-left">
+        <router-link to="/">首页</router-link>
+        <router-link to="/publish">失物登记</router-link>
+        <router-link to="/personal">个人中心</router-link>
       </div>
+    </div>
 
-      <!-- 搜索+筛选区域 -->
-      <div class="search-filter-wrap">
-        <div class="search-box">
-          <input
-            v-model="searchKeyword"
-            type="text"
-            placeholder="请输入物品名称、描述进行搜索..."
-            @keyup.enter="handleSearch"
-          />
-          <button @click="handleSearch">搜索</button>
-        </div>
+    <!-- 搜索和筛选 -->
+    <div class="search-bar">
+      <input
+        v-model="keyword"
+        type="text"
+        placeholder="输入物品名称搜索..."
+        class="search-input"
+      >
+      <select v-model="filterType" class="filter-select">
+        <option value="">全部类型</option>
+        <option value="丢失物品">丢失物品</option>
+        <option value="拾取物品">拾取物品</option>
+      </select>
+    </div>
 
-        <div class="filter-wrap">
-          <span class="filter-label">筛选：</span>
-          <select v-model="filterType" @change="handleFilterChange">
-            <option value="all">全部</option>
-            <option value="lost">寻物启事</option>
-            <option value="found">捡到物品</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- 这里后面放物品列表，现在占位 -->
-      <div class="item-placeholder">
-        <p>搜索筛选结果展示区域（后续接入物品数据）</p>
-        <p>搜索关键词：{{ searchKeyword || '无' }}</p>
-        <p>筛选类型：{{ filterType === 'all' ? '全部' : filterType === 'lost' ? '寻物启事' : '捡到物品' }}</p>
+    <!-- 最新登记记录 -->
+    <div class="record-area">
+      <h3>最新登记记录</h3>
+      <div v-if="filterRecordList.length === 0" class="empty">暂无待认领的登记记录</div>
+      <div v-for="item in filterRecordList" :key="item.id" class="record-card">
+        <span class="type-tag">{{ item.type }}</span>
+        <span class="name">{{ item.name }}</span>
+        <span class="time">{{ item.time }}</span>
+        <router-link :to="`/detail/${item.id}`" class="detail-link">查看详情</router-link>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import NavBar from '../components/NavBar.vue'
+import { ref, onMounted, computed } from 'vue'
+const keyword = ref('')
+const filterType = ref('')
+const allRecord = ref([])
 
-const searchKeyword = ref('')
-const filterType = ref('all')
-
-// 搜索
-function handleSearch() {
-  console.log('搜索关键词：', searchKeyword.value)
-  console.log('当前筛选条件：', filterType.value)
-  // 后续这里对接列表查询逻辑
+// 读取所有登记信息
+function loadRecords() {
+  const allData = JSON.parse(localStorage.getItem('itemList')) || []
+  allRecord.value = allData
 }
 
-// 筛选切换
-function handleFilterChange() {
-  console.log('切换筛选条件：', filterType.value)
-  // 后续这里对接列表查询逻辑
-}
+// 搜索+筛选逻辑，自动过滤，只显示待认领
+const filterRecordList = computed(() => {
+  return allRecord.value.filter(item => {
+    // 名称模糊搜索
+    const nameMatch = item.name.includes(keyword.value)
+    // 类型筛选，空=全部
+    const typeMatch = filterType.value ? item.type === filterType.value : true
+    // 只保留待认领，已认领的直接过滤掉，不在首页展示
+    const statusMatch = item.status === 'pending'
+    return nameMatch && typeMatch && statusMatch
+  }).slice(0,5) // 筛选之后，只保留前5条
+})
+
+onMounted(()=>{
+  loadRecords()
+})
 </script>
 
 <style scoped>
-.home-content {
-  max-width: 1200px;
+.home-container {
+  width: 92%;
+  max-width: 1000px;
   margin: 0 auto;
-  padding: 40px 20px;
 }
-
-.welcome-card {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 40px;
-  border-radius: 12px;
-  margin-bottom: 30px;
-  text-align: center;
-}
-
-.welcome-card h1 {
-  margin: 0 0 12px 0;
-  font-size: 28px;
-}
-
-.welcome-card p {
-  margin: 0;
-  opacity: 0.9;
-  font-size: 16px;
-}
-
-/* 搜索筛选容器 */
-.search-filter-wrap {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 20px;
-  background: #fff;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-  margin-bottom: 30px;
-}
-
-.search-box {
-  display: flex;
-  flex: 1;
-  gap: 10px;
-}
-
-.search-box input {
-  flex: 1;
-  padding: 10px 14px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 14px;
-  outline: none;
-}
-
-.search-box input:focus {
-  border-color: #667eea;
-}
-
-.search-box button {
-  padding: 10px 24px;
-  background: #667eea;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.search-box button:hover {
-  background: #5868d8;
-}
-
-.filter-wrap {
+/* 导航栏 蓝色背景 */
+.top-nav {
   display: flex;
   align-items: center;
-  gap: 8px;
+  padding:18px 24px;
+  background-color: #409eff;
+  border-radius: 0 0 12px 12px;
+  margin-bottom:32px;
+  box-shadow: 0 2px 6px rgba(64,158,255,0.25);
 }
-
-.filter-label {
-  font-size: 14px;
-  color: #444;
+.nav-left{
+  display:flex;
+  gap:28px;
 }
-
-.filter-wrap select {
-  padding: 9px 12px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 14px;
-  outline: none;
+.nav-left a{
+  text-decoration:none;
+  color:#ffffff;
+  font-size:17px;
+  transition: color 0.2s;
 }
-
-.item-placeholder {
-  background: #fff;
-  padding: 40px;
-  border-radius: 10px;
-  text-align: center;
-  color: #888;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+.nav-left a:hover{
+  color:#e8f4ff;
+}
+/* 搜索栏靠右 */
+.search-bar {
+  display: flex;
+  gap:12px;
+  justify-content: flex-end;
+  margin-bottom:28px;
+}
+.search-input{
+  padding:11px 16px;
+  border:1px solid #cbd5e0;
+  border-radius:10px;
+  outline:none;
+  width:260px;
+  transition: border-color 0.2s;
+}
+.search-input:focus{
+  border-color:#409eff;
+}
+.filter-select{
+  padding:11px 14px;
+  border:1px solid #cbd5e0;
+  border-radius:10px;
+  transition: border-color 0.2s;
+}
+.filter-select:focus{
+  border-color:#409eff;
+}
+.record-area h3{
+  color:#2c5282;
+  margin-bottom:18px;
+  font-size:20px;
+}
+.record-card{
+  display:flex;
+  align-items:center;
+  gap:16px;
+  background:#fff;
+  border:none;
+  padding:16px 20px;
+  border-radius:12px;
+  margin-bottom:14px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+  transition: transform 0.2s;
+}
+.record-card:hover{
+  transform: translateY(-2px);
+}
+.type-tag{
+  background:#409eff;
+  color:#fff;
+  padding:4px 10px;
+  border-radius:20px;
+  font-size:13px;
+  white-space: nowrap;
+}
+.name{
+  flex:1;
+  color:#222;
+  font-size:16px;
+}
+.time{
+  color:#666;
+  font-size:14px;
+  white-space: nowrap;
+}
+.detail-link{
+  color:#409eff;
+  text-decoration: none;
+  font-weight:500;
+}
+.detail-link:hover{
+  text-decoration: underline;
+}
+.empty{
+  padding:40px;
+  text-align:center;
+  color:#888;
+  font-size:16px;
+  background:#f8fafc;
+  border-radius:12px;
 }
 </style>
