@@ -5,6 +5,8 @@ on:
 jobs:
   build-deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # 核心：给写入仓库的权限，解决git 128报错
     steps:
       - uses: actions/checkout@v4
       - name: Setup Node
