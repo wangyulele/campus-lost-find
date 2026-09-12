@@ -6,7 +6,6 @@
         <router-link to="/" class="nav-link">首页</router-link>
         <router-link to="/publish" class="nav-link">发布信息</router-link>
         <router-link to="/list" class="nav-link">物品列表</router-link>
-        <router-link to="/stats" class="nav-link">数据统计</router-link>
         <router-link to="/personal" class="nav-link">个人中心</router-link>
         <button @click="handleLogout" class="logout-btn">退出登录</button>
       </div>
